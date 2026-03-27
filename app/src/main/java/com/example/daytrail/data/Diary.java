@@ -7,12 +7,15 @@ public class Diary {
     private String content;
     private long date;
     private String weather;
+    private long categoryId;
+    private String categoryName;
 
     public Diary(String title, String content, String weather) {
         this.title = title;
         this.content = content;
         this.date = System.currentTimeMillis();
         this.weather = weather;
+        this.categoryId = 1; // 默认为"未分类"
     }
 
     public Diary(long id, String title, String content, long date, String weather) {
@@ -21,6 +24,17 @@ public class Diary {
         this.content = content;
         this.date = date;
         this.weather = weather;
+        this.categoryId = 1;
+    }
+
+    public Diary(long id, String title, String content, long date, String weather, long categoryId, String categoryName) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.date = date;
+        this.weather = weather;
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
     }
 
     public long getId() {
@@ -61,5 +75,21 @@ public class Diary {
 
     public void setWeather(String weather) {
         this.weather = weather;
+    }
+
+    public long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 }

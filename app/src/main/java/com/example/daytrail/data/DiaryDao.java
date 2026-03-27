@@ -32,6 +32,7 @@ public class DiaryDao {
             values.put(DiaryDbHelper.COLUMN_CONTENT, diary.getContent());
             values.put(DiaryDbHelper.COLUMN_DATE, diary.getDate());
             values.put(DiaryDbHelper.COLUMN_WEATHER, diary.getWeather());
+            values.put(DiaryDbHelper.COLUMN_CATEGORY_ID, diary.getCategoryId());
 
             db.insert(DiaryDbHelper.TABLE_DIARIES, null, values);
 
@@ -47,6 +48,7 @@ public class DiaryDao {
             values.put(DiaryDbHelper.COLUMN_CONTENT, diary.getContent());
             values.put(DiaryDbHelper.COLUMN_DATE, diary.getDate());
             values.put(DiaryDbHelper.COLUMN_WEATHER, diary.getWeather());
+            values.put(DiaryDbHelper.COLUMN_CATEGORY_ID, diary.getCategoryId());
 
             db.update(DiaryDbHelper.TABLE_DIARIES, values,
                     DiaryDbHelper.COLUMN_ID + " = ?",
@@ -94,8 +96,52 @@ public class DiaryDao {
                     String content = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CONTENT));
                     long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
                     String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
+                    long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CATEGORY_ID));
+                    
+                    CategoryDao categoryDao = new CategoryDao(dbHelper.getContext());
+                    com.example.daytrail.data.Category category = categoryDao.getCategoryById(categoryId);
+                    String categoryName = category != null ? category.getName() : "Uncategorized";
 
-                    diaries.add(new Diary(id, title, content, date, weather));
+                    diaries.add(new Diary(id, title, content, date, weather, categoryId, categoryName));
+                } while (cursor.moveToNext());
+            }
+
+            cursor.close();
+            allDiaries.postValue(diaries);
+        });
+
+        return allDiaries;
+    }
+    
+    public LiveData<List<Diary>> getDiariesByCategory(long categoryId) {
+        executorService.execute(() -> {
+            List<Diary> diaries = new ArrayList<>();
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+            Cursor cursor = db.query(
+                    DiaryDbHelper.TABLE_DIARIES,
+                    null,
+                    DiaryDbHelper.COLUMN_CATEGORY_ID + " = ?",
+                    new String[]{String.valueOf(categoryId)},
+                    null,
+                    null,
+                    DiaryDbHelper.COLUMN_DATE + " DESC"
+            );
+
+            if (cursor.moveToFirst()) {
+                do {
+                    long id = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_ID));
+                    String title = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_TITLE));
+                    String content = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CONTENT));
+                    long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
+                    String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
+                    long catId = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CATEGORY_ID));
+                    
+                    CategoryDao categoryDao = new CategoryDao(dbHelper.getContext());
+                    com.example.daytrail.data.Category category = categoryDao.getCategoryById(catId);
+                    String categoryName = category != null ? category.getName() : "Uncategorized";
+
+                    diaries.add(new Diary(id, title, content, date, weather, catId, categoryName));
                 } while (cursor.moveToNext());
             }
 
@@ -125,8 +171,13 @@ public class DiaryDao {
             String content = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CONTENT));
             long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
             String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
+            long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CATEGORY_ID));
+            
+            CategoryDao categoryDao = new CategoryDao(dbHelper.getContext());
+            Category category = categoryDao.getCategoryById(categoryId);
+            String categoryName = category != null ? category.getName() : "Uncategorized";
 
-            diary = new Diary(id, title, content, date, weather);
+            diary = new Diary(id, title, content, date, weather, categoryId, categoryName);
         }
 
         cursor.close();
@@ -156,8 +207,13 @@ public class DiaryDao {
                     String content = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CONTENT));
                     long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
                     String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
+                    long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CATEGORY_ID));
+                    
+                    CategoryDao categoryDao = new CategoryDao(dbHelper.getContext());
+                    com.example.daytrail.data.Category category = categoryDao.getCategoryById(categoryId);
+                    String categoryName = category != null ? category.getName() : "Uncategorized";
 
-                    diaries.add(new Diary(id, title, content, date, weather));
+                    diaries.add(new Diary(id, title, content, date, weather, categoryId, categoryName));
                 } while (cursor.moveToNext());
             }
 

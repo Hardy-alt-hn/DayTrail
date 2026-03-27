@@ -7,6 +7,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -20,7 +21,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.daytrail.adapter.DiaryAdapter;
+import com.example.daytrail.adapter.CategoryAdapter;
 import com.example.daytrail.data.Diary;
+import com.example.daytrail.data.Category;
 import com.example.daytrail.viewmodel.DiaryViewModel;
 
 public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDiaryClickListener {
@@ -29,9 +32,11 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
     private EditText searchEditText;
     private ImageButton addButton;
     private TextView emptyText;
+    private LinearLayout categoryContainer;
 
     private DiaryViewModel viewModel;
     private DiaryAdapter adapter;
+    private CategoryAdapter categoryAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,8 +50,9 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
         });
 
         initViews();
-        setupRecyclerView();
         setupViewModel();
+        setupRecyclerView();
+        setupCategoryRecyclerView();
         setupListeners();
     }
 
@@ -55,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
         searchEditText = findViewById(R.id.searchEditText);
         addButton = findViewById(R.id.addButton);
         emptyText = findViewById(R.id.emptyText);
+        categoryContainer = findViewById(R.id.categoryContainer);
     }
 
     private void setupRecyclerView() {
@@ -62,6 +69,23 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
         adapter.setOnDiaryClickListener(this);
         diaryRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         diaryRecyclerView.setAdapter(adapter);
+    }
+    
+    private void setupCategoryRecyclerView() {
+        categoryAdapter = new CategoryAdapter(this, viewModel.getSelectedCategory());
+        categoryAdapter.setOnCategoryClickListener(category -> {
+            if (category != null) {
+                viewModel.setSelectedCategory(category);
+                // 按分类过滤
+                viewModel.filterByCategory(category.getId());
+            } else {
+                showAddCategoryDialog();
+            }
+        });
+        
+        categoryAdapter.setOnCategoryLongClickListener(category -> {
+            showDeleteCategoryDialog(category);
+        });
     }
 
     private void setupViewModel() {
@@ -76,6 +100,10 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
                 emptyText.setVisibility(View.GONE);
                 diaryRecyclerView.setVisibility(View.VISIBLE);
             }
+        });
+        
+        viewModel.getAllCategories().observe(this, categories -> {
+            categoryAdapter.updateCategories(categories);
         });
     }
 
@@ -115,6 +143,42 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
                     viewModel.delete(diary);
                 })
                 .setNegativeButton("取消", null)
+                .show();
+    }
+    
+    private void showAddCategoryDialog() {
+        android.widget.EditText input = new android.widget.EditText(this);
+        input.setHint("请输入分类名称");
+        input.setMaxLines(1);
+        
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("添加新分类")
+                .setMessage("请输入新分类的名称")
+                .setView(input)
+                .setPositiveButton("添加", (dialog, which) -> {
+                    String categoryName = input.getText().toString().trim();
+                    if (!categoryName.isEmpty()) {
+                        viewModel.addCategory(categoryName);
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+    
+    public void showDeleteCategoryDialog(com.example.daytrail.data.Category category) {
+        if ("Uncategorized".equals(category.getName())) {
+            // 不能删除默认分类
+            android.widget.Toast.makeText(this, "Cannot delete default category", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Confirm Delete")
+                .setMessage("Are you sure you want to delete category \"" + category.getName() + "\"? Diaries in this category will be moved to Uncategorized.")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    viewModel.deleteCategory(category);
+                })
+                .setNegativeButton("Cancel", null)
                 .show();
     }
 }

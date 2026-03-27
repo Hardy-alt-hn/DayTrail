@@ -8,10 +8,12 @@ import java.util.List;
 
 public class DiaryRepository {
     private final DiaryDao diaryDao;
+    private final CategoryDao categoryDao;
     private final LiveData<List<Diary>> allDiaries;
 
     public DiaryRepository(Application application) {
         diaryDao = new DiaryDao(application);
+        categoryDao = new CategoryDao(application);
         allDiaries = diaryDao.getAllDiaries();
     }
 
@@ -37,5 +39,18 @@ public class DiaryRepository {
 
     public Diary getDiaryById(long id) {
         return diaryDao.getDiaryById(id);
+    }
+    
+    public void addCategory(Category category) {
+        categoryDao.insert(category);
+    }
+    
+    public void deleteCategory(Category category) {
+        categoryDao.delete(category);
+    }
+    
+    public LiveData<List<Diary>> getDiariesByCategory(long categoryId) {
+        DiaryDao diaryDao = new DiaryDao(categoryDao.getContext());
+        return diaryDao.getDiariesByCategory(categoryId);
     }
 }

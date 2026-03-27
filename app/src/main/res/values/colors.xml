@@ -2,4 +2,8 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="selected_category_background">#2196F3</color>
+    <color name="selected_category_text">#FFFFFF</color>
+    <color name="default_category_background">#E3F2FD</color>
+    <color name="default_category_text">#666666</color>
 </resources>

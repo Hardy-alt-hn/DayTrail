@@ -38,6 +38,30 @@
             android:src="@android:drawable/ic_input_add"
             android:contentDescription="添加日记" />
     </LinearLayout>
+    
+    <HorizontalScrollView
+        android:id="@+id/categoryScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:background="#FFFFFF"
+        app:layout_constraintTop_toBottomOf="@id/searchLayout">
+        
+        <LinearLayout
+            android:id="@+id/categoryContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:gravity="center_vertical">
+            
+            <!-- 分类标签将动态添加到这里 -->
+            
+        </LinearLayout>
+    </HorizontalScrollView>
 
     <TextView
         android:id="@+id/emptyText"
@@ -49,7 +73,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/searchLayout" />
+        app:layout_constraintTop_toBottomOf="@id/categoryScroll" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/diaryRecyclerView"
@@ -57,6 +81,6 @@
         android:layout_height="0dp"
         android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/searchLayout" />
+        app:layout_constraintTop_toBottomOf="@id/categoryScroll" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

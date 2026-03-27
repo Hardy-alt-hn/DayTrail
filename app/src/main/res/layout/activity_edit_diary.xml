@@ -4,17 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F5F5F5"
-    android:fillViewport="true"
-    android:focusable="false"
-    android:descendantFocusability="beforeDescendants">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:focusable="false"
-        android:focusableInTouchMode="false">
+        android:padding="16dp">
 
         <ImageButton
             android:id="@+id/backButton"
@@ -43,7 +39,9 @@
             android:textColor="#666666"
             android:background="#FFFFFF"
             android:padding="12dp"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            android:clickable="true"
+            android:focusable="true" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -62,11 +60,26 @@
             android:padding="12dp"
             android:textSize="16sp"
             android:maxLines="1"
-            android:inputType="text"
+            android:inputType="text|textNoSuggestions"
             android:background="#FFFFFF"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:clickable="true"
+            android:imeOptions="flagNoExtractUi"
+            android:layout_marginBottom="16dp" />
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="分类"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginBottom="8dp" />
+
+        <Spinner
+            android:id="@+id/categorySpinner"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#FFFFFF"
+            android:padding="12dp"
             android:layout_marginBottom="16dp" />
 
         <TextView
@@ -78,44 +91,18 @@
             android:textColor="#333333"
             android:layout_marginBottom="8dp" />
 
-        <RadioGroup
-            android:id="@+id/weatherRadioGroup"
+        <EditText
+            android:id="@+id/weatherEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="#FFFFFF"
+            android:hint="请输入天气（如：晴、多云、雨等）"
             android:padding="12dp"
-            android:layout_marginBottom="16dp">
-
-            <RadioButton
-                android:id="@+id/sunnyRadio"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="☀️ 晴"
-                android:checked="true" />
-
-            <RadioButton
-                android:id="@+id/cloudyRadio"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="☁️ 多云" />
-
-            <RadioButton
-                android:id="@+id/rainyRadio"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="🌧️ 雨" />
-
-            <RadioButton
-                android:id="@+id/snowyRadio"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="❄️ 雪" />
-        </RadioGroup>
+            android:textSize="16sp"
+            android:maxLines="1"
+            android:inputType="text|textNoSuggestions"
+            android:background="#FFFFFF"
+            android:imeOptions="flagNoExtractUi"
+            android:layout_marginBottom="16dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -134,13 +121,11 @@
             android:padding="12dp"
             android:textSize="16sp"
             android:gravity="top"
-            android:inputType="textMultiLine"
+            android:inputType="textMultiLine|textNoSuggestions"
             android:scrollbars="vertical"
             android:lineSpacingMultiplier="1.5"
             android:background="#FFFFFF"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:clickable="true"
+            android:imeOptions="flagNoExtractUi"
             android:layout_marginBottom="24dp" />
 
         <Button

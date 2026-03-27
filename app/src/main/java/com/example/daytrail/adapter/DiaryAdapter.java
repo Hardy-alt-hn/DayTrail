@@ -64,6 +64,7 @@ public class DiaryAdapter extends ListAdapter<Diary, DiaryAdapter.DiaryViewHolde
         TextView contentTextView;
         TextView dateTextView;
         TextView weatherTextView;
+        TextView categoryTextView;
         Button editButton;
         Button deleteButton;
 
@@ -73,6 +74,7 @@ public class DiaryAdapter extends ListAdapter<Diary, DiaryAdapter.DiaryViewHolde
             contentTextView = itemView.findViewById(R.id.contentTextView);
             dateTextView = itemView.findViewById(R.id.dateTextView);
             weatherTextView = itemView.findViewById(R.id.weatherTextView);
+            categoryTextView = itemView.findViewById(R.id.categoryTextView);
             editButton = itemView.findViewById(R.id.editButton);
             deleteButton = itemView.findViewById(R.id.deleteButton);
         }
@@ -84,17 +86,20 @@ public class DiaryAdapter extends ListAdapter<Diary, DiaryAdapter.DiaryViewHolde
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
             dateTextView.setText(sdf.format(new Date(diary.getDate())));
 
+            // 直接显示天气文本，支持自定义输入
             String weather = diary.getWeather();
-            if ("sunny".equals(weather)) {
-                weatherTextView.setText("☀️");
-            } else if ("cloudy".equals(weather)) {
-                weatherTextView.setText("☁️");
-            } else if ("rainy".equals(weather)) {
-                weatherTextView.setText("🌧️");
-            } else if ("snowy".equals(weather)) {
-                weatherTextView.setText("❄️");
+            if (weather != null && !weather.isEmpty()) {
+                weatherTextView.setText(weather);
             } else {
-                weatherTextView.setText("☀️");
+                weatherTextView.setText("晴");
+            }
+            
+            // 显示分类
+            String categoryName = diary.getCategoryName();
+            if (categoryName != null && !categoryName.isEmpty()) {
+                categoryTextView.setText(categoryName);
+            } else {
+                categoryTextView.setText("未分类");
             }
 
             editButton.setOnClickListener(v -> {
