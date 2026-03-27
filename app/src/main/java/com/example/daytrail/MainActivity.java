@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
@@ -20,6 +21,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.daytrail.adapter.DiaryAdapter;
+import com.example.daytrail.auth.AuthManager;
+import com.example.daytrail.auth.LoginActivity;
 import com.example.daytrail.data.Diary;
 import com.example.daytrail.viewmodel.DiaryViewModel;
 
@@ -28,10 +31,13 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
     private RecyclerView diaryRecyclerView;
     private EditText searchEditText;
     private ImageButton addButton;
+    private ImageButton logoutButton;
     private TextView emptyText;
 
     private DiaryViewModel viewModel;
     private DiaryAdapter adapter;
+    private AuthManager authManager;
+    private boolean isSearchActive = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,11 +56,23 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
         setupListeners();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!isSearchActive) {
+            searchEditText.setText("");
+            viewModel.refreshData();
+        }
+    }
+
     private void initViews() {
         diaryRecyclerView = findViewById(R.id.diaryRecyclerView);
         searchEditText = findViewById(R.id.searchEditText);
         addButton = findViewById(R.id.addButton);
+        logoutButton = findViewById(R.id.logoutButton);
         emptyText = findViewById(R.id.emptyText);
+
+        authManager = AuthManager.getInstance(getApplication());
     }
 
     private void setupRecyclerView() {
@@ -66,7 +84,6 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
 
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(DiaryViewModel.class);
-        viewModel.refreshData();
 
         viewModel.getDisplayedDiaries().observe(this, diaries -> {
             if (diaries != null) {
@@ -82,19 +99,13 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
         });
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        viewModel.refreshData();
-        searchEditText.setText("");
-        viewModel.setSearchQuery("");
-    }
-
     private void setupListeners() {
         addButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, EditDiaryActivity.class);
             startActivity(intent);
         });
+
+        logoutButton.setOnClickListener(v -> showLogoutDialog());
 
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -102,12 +113,34 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                viewModel.setSearchQuery(s.toString());
+                String query = s.toString();
+                isSearchActive = !query.isEmpty();
+                viewModel.setSearchQuery(query);
             }
 
             @Override
             public void afterTextChanged(Editable s) {}
         });
+    }
+
+    private void showLogoutDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("退出登录")
+                .setMessage("确定要退出登录吗？")
+                .setPositiveButton("确定", (dialog, which) -> {
+                    authManager.logout();
+                    Toast.makeText(this, "已退出登录", Toast.LENGTH_SHORT).show();
+                    navigateToLogin();
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void navigateToLogin() {
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     @Override
