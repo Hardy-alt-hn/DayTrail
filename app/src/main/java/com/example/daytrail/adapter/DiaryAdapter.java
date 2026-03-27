@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.daytrail.R;
 import com.example.daytrail.data.Diary;
+import com.example.daytrail.data.Weather;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -84,14 +85,14 @@ public class DiaryAdapter extends ListAdapter<Diary, DiaryAdapter.DiaryViewHolde
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
             dateTextView.setText(sdf.format(new Date(diary.getDate())));
 
-            String weather = diary.getWeather();
-            if ("sunny".equals(weather)) {
+            Weather weather = diary.getWeather();
+            if (weather == Weather.SUNNY) {
                 weatherTextView.setText("☀️");
-            } else if ("cloudy".equals(weather)) {
+            } else if (weather == Weather.CLOUDY) {
                 weatherTextView.setText("☁️");
-            } else if ("rainy".equals(weather)) {
+            } else if (weather == Weather.RAINY) {
                 weatherTextView.setText("🌧️");
-            } else if ("snowy".equals(weather)) {
+            } else if (weather == Weather.SNOWY) {
                 weatherTextView.setText("❄️");
             } else {
                 weatherTextView.setText("☀️");

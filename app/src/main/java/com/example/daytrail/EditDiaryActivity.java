@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.daytrail.data.Diary;
+import com.example.daytrail.data.Weather;
 import com.example.daytrail.viewmodel.DiaryViewModel;
 
 import java.text.SimpleDateFormat;
@@ -91,27 +92,29 @@ public class EditDiaryActivity extends AppCompatActivity {
     }
 
     private void loadDiary(long id) {
-        currentDiary = viewModel.getDiaryById(id);
-        if (currentDiary != null) {
-            titleEditText.setText(currentDiary.getTitle());
-            contentEditText.setText(currentDiary.getContent());
+        viewModel.getDiaryById(id).observe(this, diary -> {
+            if (diary != null) {
+                currentDiary = diary;
+                titleEditText.setText(diary.getTitle());
+                contentEditText.setText(diary.getContent());
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy 年 MM 月 dd 日", Locale.getDefault());
-            dateTextView.setText("日期：" + sdf.format(new Date(currentDiary.getDate())));
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy 年 MM 月 dd 日", Locale.getDefault());
+                dateTextView.setText("日期：" + sdf.format(new Date(diary.getDate())));
 
-            String weather = currentDiary.getWeather();
-            if ("sunny".equals(weather)) {
-                weatherRadioGroup.check(R.id.sunnyRadio);
-            } else if ("cloudy".equals(weather)) {
-                weatherRadioGroup.check(R.id.cloudyRadio);
-            } else if ("rainy".equals(weather)) {
-                weatherRadioGroup.check(R.id.rainyRadio);
-            } else if ("snowy".equals(weather)) {
-                weatherRadioGroup.check(R.id.snowyRadio);
+                Weather weather = diary.getWeather();
+                if (weather == Weather.SUNNY) {
+                    weatherRadioGroup.check(R.id.sunnyRadio);
+                } else if (weather == Weather.CLOUDY) {
+                    weatherRadioGroup.check(R.id.cloudyRadio);
+                } else if (weather == Weather.RAINY) {
+                    weatherRadioGroup.check(R.id.rainyRadio);
+                } else if (weather == Weather.SNOWY) {
+                    weatherRadioGroup.check(R.id.snowyRadio);
+                }
             }
-        }
 
-        titleEditText.postDelayed(() -> showKeyboard(titleEditText), 300);
+            titleEditText.postDelayed(() -> showKeyboard(titleEditText), 300);
+        });
     }
 
     private void saveDiary() {
@@ -131,13 +134,13 @@ public class EditDiaryActivity extends AppCompatActivity {
         }
 
         int selectedWeatherId = weatherRadioGroup.getCheckedRadioButtonId();
-        String weather = "sunny";
+        Weather weather = Weather.SUNNY;
         if (selectedWeatherId == R.id.cloudyRadio) {
-            weather = "cloudy";
+            weather = Weather.CLOUDY;
         } else if (selectedWeatherId == R.id.rainyRadio) {
-            weather = "rainy";
+            weather = Weather.RAINY;
         } else if (selectedWeatherId == R.id.snowyRadio) {
-            weather = "snowy";
+            weather = Weather.SNOWY;
         }
 
         if (isEditMode && currentDiary != null) {

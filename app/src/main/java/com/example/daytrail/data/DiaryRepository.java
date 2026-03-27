@@ -35,7 +35,11 @@ public class DiaryRepository {
         diaryDao.delete(diary);
     }
 
-    public Diary getDiaryById(long id) {
+    public LiveData<Diary> getDiaryById(long id) {
         return diaryDao.getDiaryById(id);
+    }
+
+    public void refreshAllDiaries() {
+        diaryDao.loadAllDiaries();
     }
 }

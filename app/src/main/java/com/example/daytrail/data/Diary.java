@@ -6,16 +6,16 @@ public class Diary {
     private String title;
     private String content;
     private long date;
-    private String weather;
+    private Weather weather;
 
-    public Diary(String title, String content, String weather) {
+    public Diary(String title, String content, Weather weather) {
         this.title = title;
         this.content = content;
         this.date = System.currentTimeMillis();
         this.weather = weather;
     }
 
-    public Diary(long id, String title, String content, long date, String weather) {
+    public Diary(long id, String title, String content, long date, Weather weather) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -55,11 +55,11 @@ public class Diary {
         this.date = date;
     }
 
-    public String getWeather() {
+    public Weather getWeather() {
         return weather;
     }
 
-    public void setWeather(String weather) {
+    public void setWeather(Weather weather) {
         this.weather = weather;
     }
 }

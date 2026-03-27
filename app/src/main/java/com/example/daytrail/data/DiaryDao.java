@@ -18,10 +18,12 @@ public class DiaryDao {
     private final DiaryDbHelper dbHelper;
     private final ExecutorService executorService;
     private final MutableLiveData<List<Diary>> allDiaries = new MutableLiveData<>();
+    private boolean isDataLoaded = false;
 
     public DiaryDao(Context context) {
         dbHelper = new DiaryDbHelper(context);
         executorService = Executors.newFixedThreadPool(4);
+        loadAllDiaries();
     }
 
     public void insert(Diary diary) {
@@ -31,7 +33,7 @@ public class DiaryDao {
             values.put(DiaryDbHelper.COLUMN_TITLE, diary.getTitle());
             values.put(DiaryDbHelper.COLUMN_CONTENT, diary.getContent());
             values.put(DiaryDbHelper.COLUMN_DATE, diary.getDate());
-            values.put(DiaryDbHelper.COLUMN_WEATHER, diary.getWeather());
+            values.put(DiaryDbHelper.COLUMN_WEATHER, diary.getWeather().getValue());
 
             db.insert(DiaryDbHelper.TABLE_DIARIES, null, values);
 
@@ -46,7 +48,7 @@ public class DiaryDao {
             values.put(DiaryDbHelper.COLUMN_TITLE, diary.getTitle());
             values.put(DiaryDbHelper.COLUMN_CONTENT, diary.getContent());
             values.put(DiaryDbHelper.COLUMN_DATE, diary.getDate());
-            values.put(DiaryDbHelper.COLUMN_WEATHER, diary.getWeather());
+            values.put(DiaryDbHelper.COLUMN_WEATHER, diary.getWeather().getValue());
 
             db.update(DiaryDbHelper.TABLE_DIARIES, values,
                     DiaryDbHelper.COLUMN_ID + " = ?",
@@ -68,20 +70,23 @@ public class DiaryDao {
     }
 
     public LiveData<List<Diary>> getAllDiaries() {
-        loadAllDiaries();
         return allDiaries;
     }
 
     public LiveData<List<Diary>> searchDiaries(String query) {
+        MutableLiveData<List<Diary>> searchResult = new MutableLiveData<>();
+
         executorService.execute(() -> {
             List<Diary> diaries = new ArrayList<>();
             SQLiteDatabase db = dbHelper.getReadableDatabase();
 
+            String selection = DiaryDbHelper.COLUMN_TITLE + " LIKE ? OR " + DiaryDbHelper.COLUMN_CONTENT + " LIKE ?";
+
             Cursor cursor = db.query(
                     DiaryDbHelper.TABLE_DIARIES,
                     null,
-                    DiaryDbHelper.COLUMN_TITLE + " LIKE ?",
-                    new String[]{"%" + query + "%"},
+                    selection,
+                    new String[]{"%" + query + "%", "%" + query + "%"},
                     null,
                     null,
                     DiaryDbHelper.COLUMN_DATE + " DESC"
@@ -95,46 +100,51 @@ public class DiaryDao {
                     long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
                     String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
 
-                    diaries.add(new Diary(id, title, content, date, weather));
+                    diaries.add(new Diary(id, title, content, date, Weather.fromValue(weather)));
                 } while (cursor.moveToNext());
             }
 
             cursor.close();
-            allDiaries.postValue(diaries);
+            searchResult.postValue(diaries);
         });
 
-        return allDiaries;
+        return searchResult;
     }
 
-    public Diary getDiaryById(long id) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Diary diary = null;
+    public LiveData<Diary> getDiaryById(long id) {
+        MutableLiveData<Diary> diaryLiveData = new MutableLiveData<>();
 
-        Cursor cursor = db.query(
-                DiaryDbHelper.TABLE_DIARIES,
-                null,
-                DiaryDbHelper.COLUMN_ID + " = ?",
-                new String[]{String.valueOf(id)},
-                null,
-                null,
-                null
-        );
+        executorService.execute(() -> {
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            Diary diary = null;
 
-        if (cursor.moveToFirst()) {
-            String title = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_TITLE));
-            String content = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CONTENT));
-            long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
-            String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
+            Cursor cursor = db.query(
+                    DiaryDbHelper.TABLE_DIARIES,
+                    null,
+                    DiaryDbHelper.COLUMN_ID + " = ?",
+                    new String[]{String.valueOf(id)},
+                    null,
+                    null,
+                    null
+            );
 
-            diary = new Diary(id, title, content, date, weather);
-        }
+            if (cursor.moveToFirst()) {
+                String title = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_TITLE));
+                String content = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CONTENT));
+                long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
+                String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
 
-        cursor.close();
+                diary = new Diary(id, title, content, date, Weather.fromValue(weather));
+            }
 
-        return diary;
+            cursor.close();
+            diaryLiveData.postValue(diary);
+        });
+
+        return diaryLiveData;
     }
 
-    private void loadAllDiaries() {
+    public void loadAllDiaries() {
         executorService.execute(() -> {
             List<Diary> diaries = new ArrayList<>();
             SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -157,7 +167,7 @@ public class DiaryDao {
                     long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
                     String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
 
-                    diaries.add(new Diary(id, title, content, date, weather));
+                    diaries.add(new Diary(id, title, content, date, Weather.fromValue(weather)));
                 } while (cursor.moveToNext());
             }
 

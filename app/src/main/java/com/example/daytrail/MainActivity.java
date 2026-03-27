@@ -66,17 +66,28 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
 
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(DiaryViewModel.class);
+        viewModel.refreshData();
 
-        viewModel.getSearchedDiaries().observe(this, diaries -> {
-            adapter.submitList(diaries);
-            if (diaries.isEmpty()) {
-                emptyText.setVisibility(View.VISIBLE);
-                diaryRecyclerView.setVisibility(View.GONE);
-            } else {
-                emptyText.setVisibility(View.GONE);
-                diaryRecyclerView.setVisibility(View.VISIBLE);
+        viewModel.getDisplayedDiaries().observe(this, diaries -> {
+            if (diaries != null) {
+                adapter.submitList(diaries);
+                if (diaries.isEmpty()) {
+                    emptyText.setVisibility(View.VISIBLE);
+                    diaryRecyclerView.setVisibility(View.GONE);
+                } else {
+                    emptyText.setVisibility(View.GONE);
+                    diaryRecyclerView.setVisibility(View.VISIBLE);
+                }
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        viewModel.refreshData();
+        searchEditText.setText("");
+        viewModel.setSearchQuery("");
     }
 
     private void setupListeners() {
