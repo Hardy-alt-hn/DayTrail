@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="32dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_marginEnd="8dp">
+
+    <TextView
+        android:id="@+id/categoryNameText"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="Uncategorized"
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:background="@drawable/category_background"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="false" />
+
+    <ImageButton
+        android:id="@+id/deleteCategoryButton"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="4dp"
+        android:src="@android:drawable/ic_menu_delete"
+        android:background="@drawable/delete_button_background"
+        android:contentDescription="删除分类"
+        android:scaleType="centerInside"
+        android:visibility="gone" />
+</LinearLayout>
