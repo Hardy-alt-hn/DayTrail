@@ -85,6 +85,9 @@ public class MainActivity extends AppCompatActivity implements DiaryAdapter.OnDi
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(DiaryViewModel.class);
 
+        long userId = authManager.getUserId();
+        viewModel.setUserId(userId);
+
         viewModel.getDisplayedDiaries().observe(this, diaries -> {
             if (diaries != null) {
                 adapter.submitList(diaries);

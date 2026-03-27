@@ -6,10 +6,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DiaryDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "diary.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     public static final String TABLE_DIARIES = "diaries";
     public static final String COLUMN_ID = "id";
+    public static final String COLUMN_USER_ID = "user_id";
     public static final String COLUMN_TITLE = "title";
     public static final String COLUMN_CONTENT = "content";
     public static final String COLUMN_DATE = "date";
@@ -22,6 +23,7 @@ public class DiaryDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_CREATE_DIARIES =
             "CREATE TABLE " + TABLE_DIARIES + " (" +
                     COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    COLUMN_USER_ID + " INTEGER NOT NULL, " +
                     COLUMN_TITLE + " TEXT NOT NULL, " +
                     COLUMN_CONTENT + " TEXT NOT NULL, " +
                     COLUMN_DATE + " INTEGER NOT NULL, " +
@@ -45,8 +47,10 @@ public class DiaryDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DIARIES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+        if (oldVersion < 3) {
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_DIARIES);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+        }
         onCreate(db);
     }
 

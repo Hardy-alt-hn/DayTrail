@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.daytrail.auth.AuthManager;
 import com.example.daytrail.data.Diary;
 import com.example.daytrail.data.Weather;
 import com.example.daytrail.viewmodel.DiaryViewModel;
@@ -34,6 +35,7 @@ public class EditDiaryActivity extends AppCompatActivity {
     private DiaryViewModel viewModel;
     private Diary currentDiary;
     private boolean isEditMode = false;
+    private long userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +79,10 @@ public class EditDiaryActivity extends AppCompatActivity {
 
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(DiaryViewModel.class);
+
+        AuthManager authManager = AuthManager.getInstance(getApplication());
+        userId = authManager.getUserId();
+        viewModel.setUserId(userId);
     }
 
     private void setupListeners() {
@@ -150,7 +156,7 @@ public class EditDiaryActivity extends AppCompatActivity {
             viewModel.update(currentDiary);
             Toast.makeText(this, "日记已更新", Toast.LENGTH_SHORT).show();
         } else {
-            Diary diary = new Diary(title, content, weather);
+            Diary diary = new Diary(userId, title, content, weather);
             viewModel.insert(diary);
             Toast.makeText(this, "日记已保存", Toast.LENGTH_SHORT).show();
         }

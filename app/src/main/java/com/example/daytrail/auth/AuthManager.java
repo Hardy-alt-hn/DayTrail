@@ -3,7 +3,7 @@ package com.example.daytrail.auth;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-public class AuthManager {
+public class  AuthManager {
     private static final String PREF_NAME = "daytrail_auth";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_USERNAME = "username";

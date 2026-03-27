@@ -17,19 +17,26 @@ import java.util.concurrent.Executors;
 public class DiaryDao {
     private final DiaryDbHelper dbHelper;
     private final ExecutorService executorService;
-    private final MutableLiveData<List<Diary>> allDiaries = new MutableLiveData<>();
-    private boolean isDataLoaded = false;
+    private long currentUserId = -1;
+    private final MutableLiveData<List<Diary>> userDiaries = new MutableLiveData<>();
 
     public DiaryDao(Context context) {
         dbHelper = new DiaryDbHelper(context);
         executorService = Executors.newFixedThreadPool(4);
-        loadAllDiaries();
+    }
+
+    public void setUserId(long userId) {
+        this.currentUserId = userId;
+        loadUserDiaries();
     }
 
     public void insert(Diary diary) {
+        if (currentUserId == -1) return;
+
         executorService.execute(() -> {
             SQLiteDatabase db = dbHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
+            values.put(DiaryDbHelper.COLUMN_USER_ID, currentUserId);
             values.put(DiaryDbHelper.COLUMN_TITLE, diary.getTitle());
             values.put(DiaryDbHelper.COLUMN_CONTENT, diary.getContent());
             values.put(DiaryDbHelper.COLUMN_DATE, diary.getDate());
@@ -37,7 +44,7 @@ public class DiaryDao {
 
             db.insert(DiaryDbHelper.TABLE_DIARIES, null, values);
 
-            loadAllDiaries();
+            loadUserDiaries();
         });
     }
 
@@ -51,10 +58,10 @@ public class DiaryDao {
             values.put(DiaryDbHelper.COLUMN_WEATHER, diary.getWeather().getValue());
 
             db.update(DiaryDbHelper.TABLE_DIARIES, values,
-                    DiaryDbHelper.COLUMN_ID + " = ?",
-                    new String[]{String.valueOf(diary.getId())});
+                    DiaryDbHelper.COLUMN_ID + " = ? AND " + DiaryDbHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{String.valueOf(diary.getId()), String.valueOf(currentUserId)});
 
-            loadAllDiaries();
+            loadUserDiaries();
         });
     }
 
@@ -62,15 +69,15 @@ public class DiaryDao {
         executorService.execute(() -> {
             SQLiteDatabase db = dbHelper.getWritableDatabase();
             db.delete(DiaryDbHelper.TABLE_DIARIES,
-                    DiaryDbHelper.COLUMN_ID + " = ?",
-                    new String[]{String.valueOf(diary.getId())});
+                    DiaryDbHelper.COLUMN_ID + " = ? AND " + DiaryDbHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{String.valueOf(diary.getId()), String.valueOf(currentUserId)});
 
-            loadAllDiaries();
+            loadUserDiaries();
         });
     }
 
-    public LiveData<List<Diary>> getAllDiaries() {
-        return allDiaries;
+    public LiveData<List<Diary>> getUserDiaries() {
+        return userDiaries;
     }
 
     public LiveData<List<Diary>> searchDiaries(String query) {
@@ -80,13 +87,15 @@ public class DiaryDao {
             List<Diary> diaries = new ArrayList<>();
             SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-            String selection = DiaryDbHelper.COLUMN_TITLE + " LIKE ? OR " + DiaryDbHelper.COLUMN_CONTENT + " LIKE ?";
+            String selection = DiaryDbHelper.COLUMN_USER_ID + " = ? AND (" +
+                    DiaryDbHelper.COLUMN_TITLE + " LIKE ? OR " +
+                    DiaryDbHelper.COLUMN_CONTENT + " LIKE ?)";
 
             Cursor cursor = db.query(
                     DiaryDbHelper.TABLE_DIARIES,
                     null,
                     selection,
-                    new String[]{"%" + query + "%", "%" + query + "%"},
+                    new String[]{String.valueOf(currentUserId), "%" + query + "%", "%" + query + "%"},
                     null,
                     null,
                     DiaryDbHelper.COLUMN_DATE + " DESC"
@@ -95,12 +104,13 @@ public class DiaryDao {
             if (cursor.moveToFirst()) {
                 do {
                     long id = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_ID));
+                    long userId = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_USER_ID));
                     String title = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_TITLE));
                     String content = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CONTENT));
                     long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
                     String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
 
-                    diaries.add(new Diary(id, title, content, date, Weather.fromValue(weather)));
+                    diaries.add(new Diary(id, userId, title, content, date, Weather.fromValue(weather)));
                 } while (cursor.moveToNext());
             }
 
@@ -121,20 +131,21 @@ public class DiaryDao {
             Cursor cursor = db.query(
                     DiaryDbHelper.TABLE_DIARIES,
                     null,
-                    DiaryDbHelper.COLUMN_ID + " = ?",
-                    new String[]{String.valueOf(id)},
+                    DiaryDbHelper.COLUMN_ID + " = ? AND " + DiaryDbHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{String.valueOf(id), String.valueOf(currentUserId)},
                     null,
                     null,
                     null
             );
 
             if (cursor.moveToFirst()) {
+                long userId = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_USER_ID));
                 String title = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_TITLE));
                 String content = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CONTENT));
                 long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
                 String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
 
-                diary = new Diary(id, title, content, date, Weather.fromValue(weather));
+                diary = new Diary(id, userId, title, content, date, Weather.fromValue(weather));
             }
 
             cursor.close();
@@ -144,7 +155,9 @@ public class DiaryDao {
         return diaryLiveData;
     }
 
-    public void loadAllDiaries() {
+    public void loadUserDiaries() {
+        if (currentUserId == -1) return;
+
         executorService.execute(() -> {
             List<Diary> diaries = new ArrayList<>();
             SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -152,8 +165,8 @@ public class DiaryDao {
             Cursor cursor = db.query(
                     DiaryDbHelper.TABLE_DIARIES,
                     null,
-                    null,
-                    null,
+                    DiaryDbHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{String.valueOf(currentUserId)},
                     null,
                     null,
                     DiaryDbHelper.COLUMN_DATE + " DESC"
@@ -162,12 +175,13 @@ public class DiaryDao {
             if (cursor.moveToFirst()) {
                 do {
                     long id = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_ID));
+                    long userId = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_USER_ID));
                     String title = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_TITLE));
                     String content = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_CONTENT));
                     long date = cursor.getLong(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_DATE));
                     String weather = cursor.getString(cursor.getColumnIndexOrThrow(DiaryDbHelper.COLUMN_WEATHER));
 
-                    diaries.add(new Diary(id, title, content, date, Weather.fromValue(weather)));
+                    diaries.add(new Diary(id, userId, title, content, date, Weather.fromValue(weather)));
                 } while (cursor.moveToNext());
             }
 
@@ -175,7 +189,7 @@ public class DiaryDao {
 
             Collections.sort(diaries, (d1, d2) -> Long.compare(d2.getDate(), d1.getDate()));
 
-            allDiaries.postValue(diaries);
+            userDiaries.postValue(diaries);
         });
     }
 }

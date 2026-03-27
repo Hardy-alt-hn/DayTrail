@@ -15,24 +15,28 @@ import java.util.List;
 
 public class DiaryViewModel extends AndroidViewModel {
     private final DiaryRepository repository;
-    private final LiveData<List<Diary>> allDiaries;
+    private final LiveData<List<Diary>> userDiaries;
     private final MutableLiveData<String> searchQuery = new MutableLiveData<>();
 
     public DiaryViewModel(@NonNull Application application) {
         super(application);
         repository = new DiaryRepository(application);
-        allDiaries = repository.getAllDiaries();
+        userDiaries = repository.getUserDiaries();
         searchQuery.setValue("");
     }
 
-    public LiveData<List<Diary>> getAllDiaries() {
-        return allDiaries;
+    public void setUserId(long userId) {
+        repository.setUserId(userId);
+    }
+
+    public LiveData<List<Diary>> getUserDiaries() {
+        return userDiaries;
     }
 
     public LiveData<List<Diary>> getDisplayedDiaries() {
         return Transformations.switchMap(searchQuery, query -> {
             if (query == null || query.isEmpty()) {
-                return allDiaries;
+                return userDiaries;
             } else {
                 return repository.searchDiaries(query);
             }
@@ -60,6 +64,6 @@ public class DiaryViewModel extends AndroidViewModel {
     }
 
     public void refreshData() {
-        repository.refreshAllDiaries();
+        repository.refreshUserDiaries();
     }
 }

@@ -8,15 +8,19 @@ import java.util.List;
 
 public class DiaryRepository {
     private final DiaryDao diaryDao;
-    private final LiveData<List<Diary>> allDiaries;
+    private final LiveData<List<Diary>> userDiaries;
 
     public DiaryRepository(Application application) {
         diaryDao = new DiaryDao(application);
-        allDiaries = diaryDao.getAllDiaries();
+        userDiaries = diaryDao.getUserDiaries();
     }
 
-    public LiveData<List<Diary>> getAllDiaries() {
-        return allDiaries;
+    public void setUserId(long userId) {
+        diaryDao.setUserId(userId);
+    }
+
+    public LiveData<List<Diary>> getUserDiaries() {
+        return userDiaries;
     }
 
     public LiveData<List<Diary>> searchDiaries(String query) {
@@ -39,7 +43,7 @@ public class DiaryRepository {
         return diaryDao.getDiaryById(id);
     }
 
-    public void refreshAllDiaries() {
-        diaryDao.loadAllDiaries();
+    public void refreshUserDiaries() {
+        diaryDao.loadUserDiaries();
     }
 }
